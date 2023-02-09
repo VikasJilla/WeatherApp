@@ -13,3 +13,6 @@ An Android mobile application, developed in Kotlin, that allows users to search 
 * Search View, Constraint Layout, ProgressBar(circular), Recycler View
 * ActivityResultContract support
 * Completely Implemented in Kotlin
+
+#### Sample Recording
+![](resources/recording.webm)
