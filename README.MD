@@ -15,4 +15,4 @@ An Android mobile application, developed in Kotlin, that allows users to search 
 * Completely Implemented in Kotlin
 
 #### Sample Recording
-![](resources/recording.webm)
+<img src="resources/recording.gif" width=200 height=350/>
