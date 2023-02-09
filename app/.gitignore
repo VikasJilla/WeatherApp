@@ -1,0 +1,7 @@
+/build
+.gradle
+captures/
+local.properties
+**/GeneratedPluginRegistrant.java
+fastlane/report.xml
+vendor/
