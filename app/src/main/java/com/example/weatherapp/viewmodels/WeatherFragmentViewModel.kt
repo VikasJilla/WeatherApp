@@ -15,11 +15,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class WeatherViewModel : ViewModel() {
-    private val state:MutableStateFlow<UIState> = MutableStateFlow(InitialUIState())
-    val uiState:StateFlow<UIState> = state.asStateFlow()
+class WeatherFragmentViewModel:ViewModel() {
+    private val state: MutableStateFlow<UIState> = MutableStateFlow(InitialUIState())
+    val uiState: StateFlow<UIState> = state.asStateFlow()
 
-    fun fetchWeather(location:Location){
+    fun fetchWeather(location: Location){
         state.update {
             ProgressState()
         }

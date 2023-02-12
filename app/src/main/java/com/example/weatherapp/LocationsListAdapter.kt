@@ -13,7 +13,7 @@ import com.example.weatherapp.models.Location
 
 class LocationsListAdapter(private var onClick: (Location) -> Unit,private var locationList:MutableList<Location>) :
     ListAdapter<Location, LocationViewHolder>(LocationDiffCallBack) {
-    val tag = "LocationsListAdapter"
+    private val tag = "LocationsListAdapter"
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LocationViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.location_list_item, parent, false)

@@ -4,32 +4,30 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.viewModels
-import androidx.lifecycle.Lifecycle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.example.weatherapp.databinding.ActivityMainBinding
 import com.example.weatherapp.models.Location
-import com.example.weatherapp.models.Weather
-import com.example.weatherapp.statemodels.InitialUIState
-import com.example.weatherapp.statemodels.ProgressState
-import com.example.weatherapp.statemodels.ResultUIState
-import com.example.weatherapp.statemodels.UIState
-import com.example.weatherapp.viewmodels.WeatherViewModel
+import com.example.weatherapp.viewmodels.MainActivityViewModel
+import com.example.weatherapp.viewmodels.MainActivityViewModelFactory
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
     private val tag = "MainActivity"
 
+    private lateinit var adapter:WeatherPagerAdapter
+
     private lateinit var activityMainBinding: ActivityMainBinding
-    private val weatherViewModel : WeatherViewModel by viewModels()
+    private val mainActivityViewModel : MainActivityViewModel by viewModels{
+        MainActivityViewModelFactory((application as WeatherApplication).locationRepository)
+    }
 
     private lateinit var resultLauncher:ActivityResultLauncher<Any>
 
@@ -37,42 +35,37 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         activityMainBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(activityMainBinding.root)
+        supportActionBar?.hide()
+
+
         activityMainBinding.addLocation.setOnClickListener { launchSearch(it) }
+        activityMainBinding.floatingActionButton.setOnClickListener { launchSearch(it) }
+
         resultLauncher = registerForActivityResult(PickLocation()){
             Log.d(tag,"in registerForActivityResult callback")
             if(it != null){
-                weatherViewModel.fetchWeather(it)
-            }
-        }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED){
-                weatherViewModel.uiState.collect {
-                    handleStateChange(it)
+                mainActivityViewModel.saveLocationToDB(it)
+                adapter.insertLocation(it)
+                activityMainBinding.viewpager.postDelayed(Runnable { activityMainBinding.viewpager.currentItem = 0 }, 100)
+                if(activityMainBinding.viewpager.visibility != View.VISIBLE){
+                    updateUI(false)
                 }
             }
+        }
+        adapter = WeatherPagerAdapter(this, mutableListOf())
+        activityMainBinding.viewpager.adapter = adapter
+        lifecycleScope.launch {
+            val locations = mainActivityViewModel.getLocations()
+            Log.d(tag,"locations length ${locations.size}")
+            updateUI(locations.isEmpty())
+            adapter.updateLocations(locations)
         }
     }
 
-    private fun handleStateChange(it: UIState) {
-        when (it){
-            is InitialUIState -> Log.d(tag,"in Initial UI State")
-            is ProgressState -> {
-                activityMainBinding.noContent.visibility = View.GONE
-                activityMainBinding.resultTextView.visibility = View.GONE
-                activityMainBinding.progressCircular.visibility = View.VISIBLE
-            }
-            is ResultUIState -> {
-                activityMainBinding.progressCircular.visibility = View.GONE
-                activityMainBinding.noContent.visibility = View.GONE
-                activityMainBinding.resultTextView.visibility = View.VISIBLE
-                if(it.isSuccess){
-                    activityMainBinding.resultTextView.text = "Temperature: ${(it.data as Weather).currentWeather.temperature}"
-                }else{
-                    activityMainBinding.resultTextView.text = it.data as String
-                }
-            }
-        }
+    private fun updateUI(isEmpty:Boolean){
+        activityMainBinding.noContent.visibility = if(isEmpty)View.VISIBLE else View.GONE
+        activityMainBinding.viewpager.visibility = if(isEmpty)View.GONE else View.VISIBLE
+        activityMainBinding.floatingActionButton.visibility = if(isEmpty)View.GONE else View.VISIBLE
     }
 
     private fun launchSearch(view: View) {

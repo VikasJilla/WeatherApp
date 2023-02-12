@@ -14,6 +14,8 @@ An Android mobile application, developed in Kotlin, that allows users to search 
 * Search View, Constraint Layout, ProgressBar(circular), Recycler View
 * ActivityResultContract support
 * Completely Implemented in Kotlin
+* RoomDB to save locations
+* ViewPager with FragmentStateAdapter
 
 #### APIs used:
 * For Fetching Locations "https://geocoding-api.open-meteo.com/v1/"
