@@ -22,14 +22,14 @@ class MainActivity : AppCompatActivity() {
 
     private val tag = "MainActivity"
 
-    private lateinit var adapter:WeatherPagerAdapter
+    private lateinit var adapter: WeatherPagerAdapter
 
     private lateinit var activityMainBinding: ActivityMainBinding
-    private val mainActivityViewModel : MainActivityViewModel by viewModels{
+    private val mainActivityViewModel: MainActivityViewModel by viewModels {
         MainActivityViewModelFactory((application as WeatherApplication).locationRepository)
     }
 
-    private lateinit var resultLauncher:ActivityResultLauncher<Any>
+    private lateinit var resultLauncher: ActivityResultLauncher<Any>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,13 +41,15 @@ class MainActivity : AppCompatActivity() {
         activityMainBinding.addLocation.setOnClickListener { launchSearch(it) }
         activityMainBinding.floatingActionButton.setOnClickListener { launchSearch(it) }
 
-        resultLauncher = registerForActivityResult(PickLocation()){
-            Log.d(tag,"in registerForActivityResult callback")
-            if(it != null){
+        resultLauncher = registerForActivityResult(PickLocation()) {
+            Log.d(tag, "in registerForActivityResult callback")
+            if (it != null) {
                 mainActivityViewModel.saveLocationToDB(it)
                 adapter.insertLocation(it)
-                activityMainBinding.viewpager.postDelayed(Runnable { activityMainBinding.viewpager.currentItem = 0 }, 100)
-                if(activityMainBinding.viewpager.visibility != View.VISIBLE){
+                activityMainBinding.viewpager.postDelayed(Runnable {
+                    activityMainBinding.viewpager.currentItem = 0
+                }, 100)
+                if (activityMainBinding.viewpager.visibility != View.VISIBLE) {
                     updateUI(false)
                 }
             }
@@ -55,17 +57,23 @@ class MainActivity : AppCompatActivity() {
         adapter = WeatherPagerAdapter(this, mutableListOf())
         activityMainBinding.viewpager.adapter = adapter
         lifecycleScope.launch {
-            val locations = mainActivityViewModel.getLocations()
-            Log.d(tag,"locations length ${locations.size}")
-            updateUI(locations.isEmpty())
-            adapter.updateLocations(locations)
+            try {
+                val locations = mainActivityViewModel.getLocations()
+                Log.d(tag, "locations length ${locations.size}")
+                updateUI(locations.isEmpty())
+                adapter.updateLocations(locations)
+                throw IndexOutOfBoundsException()
+            } catch (e: Exception) {
+                Log.e(tag, "error occurred $e")
+            }
         }
     }
 
-    private fun updateUI(isEmpty:Boolean){
-        activityMainBinding.noContent.visibility = if(isEmpty)View.VISIBLE else View.GONE
-        activityMainBinding.viewpager.visibility = if(isEmpty)View.GONE else View.VISIBLE
-        activityMainBinding.floatingActionButton.visibility = if(isEmpty)View.GONE else View.VISIBLE
+    private fun updateUI(isEmpty: Boolean) {
+        activityMainBinding.noContent.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        activityMainBinding.viewpager.visibility = if (isEmpty) View.GONE else View.VISIBLE
+        activityMainBinding.floatingActionButton.visibility =
+            if (isEmpty) View.GONE else View.VISIBLE
     }
 
     private fun launchSearch(view: View) {
@@ -73,22 +81,22 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-class PickLocation: ActivityResultContract<Any, Location?>() {
+class PickLocation : ActivityResultContract<Any, Location?>() {
     override fun createIntent(context: Context, input: Any): Intent =
-         Intent(context, SearchResultsActivity::class.java)
+        Intent(context, SearchResultsActivity::class.java)
 
 
     override fun parseResult(resultCode: Int, intent: Intent?): Location? {
-        Log.d("parseResult","$resultCode in parseResult")
+        Log.d("parseResult", "$resultCode in parseResult")
         if (resultCode != Activity.RESULT_OK) {
             return null
         }
         return if (Build.VERSION.SDK_INT >= 33) {
-            intent?.getParcelableExtra("location",Location::class.java)
-        } else if (Build.VERSION.SDK_INT < 33){
+            intent?.getParcelableExtra("location", Location::class.java)
+        } else if (Build.VERSION.SDK_INT < 33) {
             intent?.getParcelableExtra<Location?>("location")
-        }else{
-             null
+        } else {
+            null
         }
     }
 

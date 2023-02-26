@@ -1,7 +1,6 @@
 package com.example.weatherapp.viewmodels
 
 import android.util.Log
-import android.util.Log.d
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -19,15 +18,11 @@ class MainActivityViewModel(private val repository: LocationRepository) : ViewMo
     }
 
     suspend fun getLocations():MutableList<Location>{
-        var locs : MutableList<Location> = mutableListOf()
-//        viewModelScope.launch {
-            locs = withContext(Dispatchers.IO) {
+        val locations : MutableList<Location> = withContext(Dispatchers.IO) {
                 repository.allLocations()
             }
-            Log.d("MainActivityViewModel","location length ${locs.size}")
-//        }
-        Log.d("MainActivityViewModel","location length ${locs.size}")
-        return locs
+        Log.d("MainActivityViewModel","location length ${locations.size}")
+        return locations
     }
 }
 

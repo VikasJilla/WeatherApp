@@ -9,6 +9,8 @@ import com.example.weatherapp.statemodels.InitialUIState
 import com.example.weatherapp.statemodels.ProgressState
 import com.example.weatherapp.statemodels.ResultUIState
 import com.example.weatherapp.statemodels.UIState
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,7 +27,14 @@ class LocationViewModel : ViewModel() {
         state.update {
             ProgressState()
         }
-        viewModelScope.launch {
+        val exceptionHandler = CoroutineExceptionHandler() { ctx, t ->
+            Log.d("", "caught $ctx, $t")
+            state.update {
+                ResultUIState(false, t.localizedMessage)
+            }
+        }
+
+        viewModelScope.launch(exceptionHandler) {
             val locationResponse =
                 RetrofitProvider.getRetrofit().create(LocationService::class.java)
                     .getLocations(searchText.orEmpty())
@@ -35,11 +44,12 @@ class LocationViewModel : ViewModel() {
                 state.update {
                     ResultUIState(list.isNotEmpty(), list.ifEmpty { "No Locations Found!" })
                 }
-            }else{
+            } else {
                 state.update {
                     ResultUIState(false, locationResponse.errorBody().toString())
                 }
             }
+
         }
     }
 }

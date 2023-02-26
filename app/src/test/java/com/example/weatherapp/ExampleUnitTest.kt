@@ -1,5 +1,6 @@
 package com.example.weatherapp
 
+import com.example.weatherapp.models.Location
 import org.junit.Test
 
 import org.junit.Assert.*
